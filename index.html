@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Max AI - Pink Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            background: radial-gradient(circle at center, #2b0017 0%, #000 100%); 
+            color: #fff; font-family: 'Rajdhani', sans-serif; 
+            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+        }
+
+        /* Neon Header */
+        .header { 
+            position: absolute; top: 20px; width: 90%; display: flex; justify-content: space-between;
+            font-family: 'Orbitron', sans-serif; font-size: 14px; color: #ff007f; 
+            text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f;
+        }
+
+        /* The Stylish Pink Orb */
+        .orb-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
+        
+        .orb { 
+            width: 170px; height: 170px; border-radius: 50%;
+            background: radial-gradient(circle, #ff007f 0%, #ff00ff 50%, #000 100%);
+            box-shadow: 0 0 60px #ff007f, inset 0 0 30px #fff;
+            cursor: pointer; border: 3px solid #ff007f; z-index: 10; 
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .orb span {
+            color: #fff; font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 18px; 
+            letter-spacing: 2px; text-shadow: 0 0 15px #ff007f; pointer-events: none;
+        }
+
+        .orb:active { transform: scale(0.85); box-shadow: 0 0 100px #ff00ff; }
+        .orb.listening { animation: neonPulse 1.2s infinite; border-color: #fff; }
+
+        @keyframes neonPulse {
+            0% { transform: scale(1); box-shadow: 0 0 50px #ff007f; }
+            50% { transform: scale(1.1); box-shadow: 0 0 120px #ff00ff; }
+            100% { transform: scale(1); box-shadow: 0 0 50px #ff007f; }
+        }
+
+        /* Stylish Status Text */
+        #max-status { margin-top: 40px; font-size: 26px; color: #ff007f; text-shadow: 0 0 10px #ff007f; text-align: center; height: 35px; font-weight: bold; }
+        #user-speech { margin-top: 15px; color: #ff99cc; font-style: italic; font-size: 18px; min-height: 25px; opacity: 0.8; }
+
+        /* Footer */
+        .footer { position: absolute; bottom: 30px; letter-spacing: 5px; font-size: 13px; color: rgba(255, 102, 178, 0.4); font-family: 'Orbitron', sans-serif; }
+        .footer b { color: #ff007f; text-shadow: 0 0 10px #ff007f; }
+
+        /* Decoration Rings */
+        .ring {
+            position: absolute; width: 240px; height: 240px; border: 1px solid #ff007f;
+            border-radius: 50%; opacity: 0.2; animation: rotate 15s linear infinite;
+        }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div id="time">TIME: --:--</div>
+        <div id="batt">BATT: --%</div>
+    </div>
+
+    <div class="orb-container">
+        <div class="ring"></div>
+        <div class="ring" style="width:260px; animation-direction: reverse; border-style: dashed;"></div>
+        <button class="orb" id="orbBtn" onclick="wakeUpMax()">
+            <span>MAX AI</span>
+        </button>
+    </div>
+
+    <h1 id="max-status">System Standby</h1>
+    <p id="user-speech"></p>
+
+    <div class="footer">BUILD BY <b>ARYAN</b></div>
+
+    <script>
+        const statusH1 = document.getElementById('max-status');
+        const speechP = document.getElementById('user-speech');
+        const orb = document.getElementById('orbBtn');
+
+        // Update Stats
+        function refreshStats() {
+            const d = new Date();
+            document.getElementById('time').innerText = "TIME: " + d.getHours() + ":" + d.getMinutes().toString().padStart(2, '0');
+            if (navigator.getBattery) {
+                navigator.getBattery().then(b => {
+                    document.getElementById('batt').innerText = "BATT: " + Math.round(b.level * 100) + "%";
+                });
+            }
+        }
+        setInterval(refreshStats, 1000);
+        refreshStats();
+
+        // Speech Engine
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+
+        function speak(text) {
+            window.speechSynthesis.cancel(); 
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 1.0; msg.pitch = 1.2; // Slightly higher pitch for "Max"
+            window.speechSynthesis.speak(msg);
+            statusH1.innerText = text;
+        }
+
+        function wakeUpMax() {
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); // Unfreeze
+            try {
+                recognition.start();
+                orb.classList.add('listening');
+                statusH1.innerText = "Listening, Sir...";
+            } catch(e) { console.log("Mic error"); }
+        }
+
+        recognition.onresult = (event) => {
+            orb.classList.remove('listening');
+            const result = event.results[0][0].transcript.toLowerCase();
+            speechP.innerText = '"' + result + '"';
+            processCommand(result);
+        };
+
+        recognition.onerror = () => orb.classList.remove('listening');
+
+        function processCommand(cmd) {
+            // SOCIAL MEDIA & APPS
+            if (cmd.includes("youtube")) {
+                speak("Opening YouTube for you, Sir.");
+                setTimeout(() => { window.location.href = "https://www.youtube.com"; }, 1500);
+            }
+            else if (cmd.includes("whatsapp")) {
+                speak("Opening WhatsApp, Sir.");
+                setTimeout(() => { window.location.href = "whatsapp://send"; }, 1500);
+            }
+            else if (cmd.includes("facebook")) {
+                speak("Launching Facebook, Sir.");
+                setTimeout(() => { window.location.href = "https://www.facebook.com"; }, 1500);
+            }
+            else if (cmd.includes("instagram")) {
+                speak("Opening Instagram, Sir.");
+                setTimeout(() => { window.location.href = "instagram://app"; }, 1500);
+            }
+            // TOOLS
+            else if (cmd.includes("light on") || cmd.includes("torch on")) {
+                speak("Flashlight is now on, Sir.");
+                handleTorch(true);
+            }
+            else if (cmd.includes("light off") || cmd.includes("torch off")) {
+                speak("Flashlight is off, Sir.");
+                handleTorch(false);
+            }
+            // CONVERSATION
+            else if (cmd.includes("hello") || cmd.includes("hi max")) {
+                speak("Hello Sir! How can I help you today?");
+            }
+            else if (cmd.includes("who are you")) {
+                speak("I am Max, your personal AI assistant, created by Aryan Sir.");
+            }
+            else if (cmd.includes("time")) {
+                speak("The time is " + new Date().toLocaleTimeString() + ", Sir.");
+            }
+            // INTERNET EXPLORATION (SEARCH)
+            else {
+                speak("I will explore the internet for that. Searching now, Sir.");
+                setTimeout(() => {
+                    window.open("https://www.google.com/search?q=" + encodeURIComponent(cmd), "_blank");
+                }, 2000);
+            }
+        }
+
+        async function handleTorch(state) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}});
+                const track = stream.getVideoTracks()[0];
+                await track.applyConstraints({advanced: [{torch: state}]});
+                if (!state) track.stop();
+            } catch (e) { 
+                speak("Sir, I need camera permission to toggle the light."); 
+            }
+        }
+    </script>
+</body>
+</html>
